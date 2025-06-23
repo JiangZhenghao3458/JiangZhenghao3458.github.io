@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景观规划设计方案展示平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #f8f8f8, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            margin: 0 10px 15px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-btn i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .content-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .content-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #4facfe;
+        }
+        
+        .content-header p {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            height: 250px;
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-item:hover .caption {
+            transform: translateY(0);
+        }
+        
+        .model-container {
+            height: 500px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+        
+        #model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .project-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-card h3 {
+            color: #4facfe;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-card h3 i {
+            margin-right: 10px;
+        }
+        
+        .info-card p {
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .designer {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .model-container {
+                height: 350px;
+            }
+            
+            .tab-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+                margin: 0 5px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>城市中央公园景观设计方案</h1>
+            <p class="subtitle">本项目将传统园林美学与现代景观设计理念相融合，打造一个集休闲、娱乐、生态保护于一体的城市公共空间。</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="overview">
+                <i class="fas fa-globe-asia"></i> 项目总览
+            </button>
+            <button class="tab-btn" data-tab="plan">
+                <i class="fas fa-map"></i> 平面规划图
+            </button>
+            <button class="tab-btn" data-tab="renderings">
+                <i class="fas fa-image"></i> 效果展示图
+            </button>
+            <button class="tab-btn" data-tab="model">
+                <i class="fas fa-cube"></i> 3D交互模型
+            </button>
+        </div>
+        
+        <div id="overview" class="tab-content active">
+            <div class="content-header">
+                <h2>项目总览</h2>
+                <p>城市中央公园位于新城区核心地带，占地约15公顷，设计以"城市绿肺"为核心理念，将自然生态与城市生活完美融合，为市民提供高品质的休闲空间。</p>
+            </div>
+            
+            <div class="project-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-leaf"></i> 设计理念</h3>
+                    <p>以生态优先为原则，打造多层次植物群落，形成可持续的生态系统。设计融合传统园林造景手法与现代景观元素，创造具有文化内涵的景观空间。</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3><i class="fas fa-palette"></i> 设计亮点</h3>
+                    <p>1. 生态雨水花园系统<br>2. 智能灌溉与照明系统<br>3. 多功能活动草坪<br>4. 文化主题景观区<br>5. 无障碍通行设计</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3><i class="fas fa-tree"></i> 植被规划</h3>
+                    <p>选用本地适生植物200余种，其中乔木占比40%，灌木30%，地被植物30%。形成四季有景、色彩丰富的植物景观，预计年固碳量达120吨。</p>
+                </div>
+            </div>
+            
+            <div class="image-gallery">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="公园鸟瞰图">
+                    <div class="caption">公园整体鸟瞰效果</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="景观节点">
+                    <div class="caption">核心景观节点设计</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="生态区域">
+                    <div class="caption">生态湿地保护区</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="plan" class="tab-content">
+            <div class="content-header">
+                <h2>总体规划设计</h2>
+                <p>公园采用"一环五区"的规划结构，包括中央活动环、文化展示区、生态休闲区、儿童活动区、运动健身区和湿地观赏区。</p>
+            </div>
+            
+            <div class="image-gallery">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="总平面图">
+                    <div class="caption">总体规划平面图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="功能分区">
+                    <div class="caption">功能分区示意图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="交通分析">
+                    <div class="caption">交通流线分析图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1581578029520-8d7b47a3b1e1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="竖向设计">
+                    <div class="caption">竖向设计平面图</div>
+                </div>
+            </div>
+            
+            <div class="project-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-road"></i> 交通系统</h3>
+                    <p>三级园路系统：主园路4米宽（无障碍设计），次园路2.5米，游步道1.5米。设置5个主要出入口和3个次要出入口，满足不同方向人流需求。</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3><i class="fas fa-water"></i> 水系设计</h3>
+                    <p>中心湖区面积8000平方米，水深0.8-1.5米，采用生态驳岸设计。雨水收集系统可满足80%的景观用水需求，形成自循环生态系统。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="renderings" class="tab-content">
+            <div class="content-header">
+                <h2>景观效果展示</h2>
+                <p>通过不同季节、不同时段的效果图，展示公园建成后的视觉体验和空间感受。</p>
+            </div>
+            
+            <div class="image-gallery">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="主入口效果">
+                    <div class="caption">主入口景观效果图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1476820865390-c52aeebb9891?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="滨水景观">
+                    <div class="caption">滨水休闲区效果图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="夜景">
+                    <div class="caption">公园夜景效果图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="樱花大道">
+                    <div class="caption">春季樱花大道效果图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="观景台">
+                    <div class="caption">山顶观景台效果图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="生态区">
+                    <div class="caption">生态保护区效果图</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="model" class="tab-content">
+            <div class="content-header">
+                <h2>3D交互模型</h2>
+                <p>通过三维模型全方位了解景观设计方案，可自由旋转、缩放查看设计细节。</p>
+            </div>
+            
+            <div class="model-container">
+                <div id="model-viewer"></div>
+                <div class="controls">
+                    <button class="control-btn" id="reset-view"><i class="fas fa-sync-alt"></i></button>
+                    <button class="control-btn" id="day-mode"><i class="fas fa-sun"></i></button>
+                    <button class="control-btn" id="night-mode"><i class="fas fa-moon"></i></button>
+                </div>
+            </div>
+            
+            <div class="project-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-mouse-pointer"></i> 操作指南</h3>
+                    <p>1. 鼠标左键拖动：旋转模型<br>2. 鼠标滚轮：缩放视图<br>3. 鼠标右键拖动：平移视图<br>4. 使用右上角按钮重置视图或切换日夜模式</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> 模型信息</h3>
+                    <p>模型比例：1:500<br>包含元素：地形、植被、建筑、道路、水体<br>多边形数量：约120万面<br>文件大小：85MB</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p class="designer">景观设计方案 © 2023 绿景规划设计研究院 | 设计团队：张景明、李思源、王艺林</p>
+        </footer>
+    </div>
+
+    <script>
+        // 标签切换功能
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // 移除所有active类
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // 添加active类到当前按钮和内容
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+                
+                // 如果是模型标签，初始化3D模型
+                if(tabId === 'model') {
+                    init3DModel();
+                }
+            });
+        });
+        
+        // 3D模型初始化
+        function init3DModel() {
+            const container = document.getElementById('model-viewer');
+            if(container.innerHTML !== '') return; // 避免重复初始化
+            
+            // 创建场景
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 20, 100);
+            
+            // 创建相机
+            const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+            
+            // 创建渲染器
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // 添加轨道控制器
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 15);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // 创建简单的地形
+            const groundGeometry = new THREE.PlaneGeometry(40, 40, 20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x7cfc00,
+                wireframe: false,
+                roughness: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -2;
+            scene.add(ground);
+            
+            // 创建水体
+            const waterGeometry = new THREE.PlaneGeometry(15, 10);
+            const waterMaterial = new THREE.MeshStandardMaterial({
+                color: 0x0077be,
+                transparent: true,
+                opacity: 0.7,
+                metalness: 0.8,
+                roughness: 0.1
+            });
+            const water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.set(0, -1.9, 0);
+            scene.add(water);
+            
+            // 创建树
+            function createTree(x, z) {
+                // 树干
+                const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 4, 8);
+                const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.set(x, 0, z);
+                
+                // 树冠
+                const canopyGeometry = new THREE.SphereGeometry(2.5, 8, 8);
+                const canopyMaterial = new THREE.MeshStandardMaterial({ color: 0x32CD32 });
+                const canopy = new THREE.Mesh(canopyGeometry, canopyMaterial);
+                canopy.position.set(x, 3, z);
+                
+                scene.add(trunk);
+                scene.add(canopy);
+            }
+            
+            // 添加几棵树
+            createTree(-8, -5);
+            createTree(5, 6);
+            createTree(10, -8);
+            createTree(-12, 8);
+            
+            // 创建建筑
+            const buildingGeometry = new THREE.BoxGeometry(4, 6, 4);
+            const buildingMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xcd5c5c,
+                metalness: 0.2,
+                roughness: 0.7
+            });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.set(-5, 1, -8);
+            scene.add(building);
+            
+            // 创建路径
+            const pathGeometry = new THREE.PlaneGeometry(8, 2);
+            const pathMaterial = new THREE.MeshStandardMaterial({ color: 0xd3d3d3 });
+            const path = new THREE.Mesh(pathGeometry, pathMaterial);
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, -1.95, 0);
+            scene.add(path);
+            
+            // 动画循环
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            // 重置视图
+            document.getElementById('reset-view').addEventListener('click', () => {
+                controls.reset();
+            });
+            
+            // 日夜模式切换
+            document.getElementById('day-mode').addEventListener('click', () => {
+                scene.background = new THREE.Color(0x87CEEB);
+                directionalLight.intensity = 0.8;
+            });
+            
+            document.getElementById('night-mode').addEventListener('click', () => {
+                scene.background = new THREE.Color(0x0c1445);
+                directionalLight.intensity = 0.2;
+            });
+        }
+    </script>
+</body>
+</html>
